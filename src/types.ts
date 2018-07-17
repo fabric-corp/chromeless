@@ -6,6 +6,7 @@ export interface Client {
   Runtime: any
   Emulation: any
   Storage: any
+  send: <T>(method: string, params?: { [key: string]: string }, callback?: () => Promise<T>) => Promise<T>
   close: () => void
   target: {
     id: string
@@ -62,140 +63,144 @@ export interface Chrome {
 
 export type Command =
   | {
-      type: 'goto'
-      url: string
-      timeout?: number
-    }
+    type: 'goto'
+    url: string
+    timeout?: number
+  }
   | {
-      type: 'clearCache'
-    }
+    type: 'clearCache'
+  }
   | {
-      type: 'setViewport'
-      options: DeviceMetrics
-    }
+    type: 'setViewport'
+    options: DeviceMetrics
+  }
   | {
-      type: 'setUserAgent'
-      useragent: string
-    }
+    type: 'setUserAgent'
+    useragent: string
+  }
   | {
-      type: 'wait'
-      timeout?: number
-      selector?: string
-      fn?: string
-      args?: any[]
-    }
+    type: 'wait'
+    timeout?: number
+    selector?: string
+    fn?: string
+    args?: any[]
+  }
   | {
-      type: 'click'
-      selector: string
-      x?: number
-      y?: number
-    }
+    type: 'click'
+    selector: string
+    x?: number
+    y?: number
+  }
   | {
-      type: 'returnCode'
-      fn: string
-      args?: any[]
-    }
+    type: 'returnCode'
+    fn: string
+    args?: any[]
+  }
   | {
-      type: 'returnInputValue'
-      selector: string
-    }
+    type: 'returnInputValue'
+    selector: string
+  }
   | {
-      type: 'returnExists'
-      selector: string
-    }
+    type: 'returnExists'
+    selector: string
+  }
   | {
-      type: 'returnValue'
-      selector: string
-    }
+    type: 'returnValue'
+    selector: string
+  }
   | {
-      type: 'returnScreenshot'
-      selector?: string
-      options?: ScreenshotOptions
-    }
+    type: 'returnScreenshot'
+    selector?: string
+    options?: ScreenshotOptions
+  }
   | {
-      type: 'returnHtml'
-    }
+    type: 'returnHtml'
+  }
   | {
-      type: 'returnHtmlUrl'
-    }
+    type: 'returnHtmlUrl'
+  }
   | {
-      type: 'returnPdf'
-      options?: PdfOptions
-    }
+    type: 'returnPdf'
+    options?: PdfOptions
+  }
   | {
-      type: 'scrollTo'
-      x: number
-      y: number
-    }
+    type: 'scrollTo'
+    x: number
+    y: number
+  }
   | {
-      type: 'scrollToElement'
-      selector: string
-    }
+    type: 'scrollToElement'
+    selector: string
+  }
   | {
-      type: 'setHtml'
-      html: string
-    }
+    type: 'setHtml'
+    html: string
+  }
   | {
-      type: 'setExtraHTTPHeaders'
-      headers: Headers
-    }
+    type: 'setExtraHTTPHeaders'
+    headers: Headers
+  }
   | {
-      type: 'press'
-      keyCode: number
-      count?: number
-      modifiers?: any
-    }
+    type: 'press'
+    keyCode: number
+    count?: number
+    modifiers?: any
+  }
   | {
-      type: 'type'
-      input: string
-      selector?: string
-    }
+    type: 'type'
+    input: string
+    selector?: string
+  }
   | {
-      type: 'clearCookies'
-    }
+    type: 'clearCookies'
+  }
   | {
-      type: 'clearStorage'
-      origin: string
-      storageTypes: string
-    }
+    type: 'clearStorage'
+    origin: string
+    storageTypes: string
+  }
   | {
-      type: 'deleteCookies'
-      name: string
-      url: string
-    }
+    type: 'deleteCookies'
+    name: string
+    url: string
+  }
   | {
-      type: 'setCookies'
-      nameOrCookies: string | Cookie | Cookie[]
-      value?: string
-    }
+    type: 'setCookies'
+    nameOrCookies: string | Cookie | Cookie[]
+    value?: string
+  }
   | {
-      type: 'allCookies'
-    }
+    type: 'allCookies'
+  }
   | {
-      type: 'cookies'
-      nameOrQuery?: string | CookieQuery
-    }
+    type: 'cookies'
+    nameOrQuery?: string | CookieQuery
+  }
   | {
-      type: 'mousedown'
-      selector: string
-    }
+    type: 'mousedown'
+    selector: string
+  }
   | {
-      type: 'mouseup'
-      selector: string
-    }
+    type: 'mouseup'
+    selector: string
+  }
   | {
-      type: 'focus'
-      selector: string
-    }
+    type: 'focus'
+    selector: string
+  }
   | {
-      type: 'clearInput'
-      selector: string
-    }
+    type: 'clearInput'
+    selector: string
+  }
   | {
-      type: 'setFileInput'
-      selector: string
-      files: string[]
-    }
+    type: 'setFileInput'
+    selector: string
+    files: string[]
+  }
+  | {
+    type: 'downloadFile'
+    selector: string
+  }
 
 export type Headers = Record<string, string>
 

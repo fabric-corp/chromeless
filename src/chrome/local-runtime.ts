@@ -43,6 +43,10 @@ import {
   eventToPromise,
   waitForPromise,
 } from '../util'
+import * as cuid from 'cuid';
+import * as fs from 'fs';
+import { spawnSync } from 'child_process';
+import { setTimeout } from 'core-js/library/web/timers';
 
 export default class LocalRuntime {
   private client: Client
@@ -123,6 +127,8 @@ export default class LocalRuntime {
         return this.clearInput(command.selector)
       case 'setFileInput':
         return this.setFileInput(command.selector, command.files)
+      case 'downloadFile':
+        return this.downloadFile(command.selector)
       default:
         throw new Error(`No such command: ${JSON.stringify(command)}`)
     }
@@ -490,6 +496,57 @@ export default class LocalRuntime {
 
     await setFileInput(this.client, selector, files)
     this.log(`setFileInput() files ${files}`)
+  }
+
+  async downloadFile(selector: string): Promise<string> {
+    const downloadPath = "/tmp/" + cuid()
+
+    fs.mkdirSync(downloadPath);
+
+    await this.client.send('Page.setDownloadBehavior', {
+      behavior: "allow",
+      downloadPath: downloadPath
+    })
+
+    await this.click(selector)
+
+    await new Promise((resolve, reject) => {
+      const checkFile = () => {
+        if (fs.readdirSync(downloadPath).length == 1)
+          resolve()
+
+        setTimeout(checkFile, 5)
+      }
+
+      checkFile()
+    })
+
+    this.log("Download started");
+
+    const filePath = <string>await new Promise((resolve, reject) => {
+      const checkFile = () => {
+        const filePath = downloadPath + '/' + fs.readdirSync(downloadPath)[0]
+
+        if (spawnSync("lsof " + filePath).stdout == null && !filePath.includes("crdownload"))
+          resolve(filePath)
+
+        setTimeout(checkFile, 5)
+      }
+
+      checkFile()
+    })
+
+    this.log("Download finished")
+
+    const data = fs.readFileSync(filePath).toString()
+
+    this.log('Opened file')
+
+    if (isS3Configured()) {
+      return await uploadToS3(data, 'text/csv')
+    } else {
+      return filePath
+    }
   }
 
   private log(msg: string): void {

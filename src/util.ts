@@ -258,7 +258,7 @@ export async function evaluate<T>(
   if (result && result.exceptionDetails) {
     throw new Error(
       result.exceptionDetails.exception.value ||
-        result.exceptionDetails.exception.description,
+      result.exceptionDetails.exception.description,
     )
   }
 
@@ -664,13 +664,20 @@ export function isS3Configured() {
 const s3ContentTypes = {
   'image/png': {
     extension: 'png',
+    encoding: 'base64'
   },
   'application/pdf': {
     extension: 'pdf',
+    encoding: 'base64'
   },
   'text/html': {
     extension: 'html',
+    encoding: 'utf8'
   },
+  'text/csv': {
+    extension: 'csv',
+    encoding: 'utf8'
+  }
 }
 
 export async function uploadToS3(
@@ -689,7 +696,7 @@ export async function uploadToS3(
       Key: s3Path,
       ContentType: contentType,
       ACL: getS3FilesPermissions(),
-      Body: Buffer.from(data, contentType === 'text/html' ? 'utf8' : 'base64'),
+      Body: Buffer.from(data, s3ContentType.encoding),
     })
     .promise()
 

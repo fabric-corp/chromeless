@@ -348,10 +348,19 @@ export default class Chromeless<T extends any> implements Promise<T> {
   setFileInput(selector: string, files: string[]): Chromeless<T>
   setFileInput(selector: string, files: string | string[]): Chromeless<T> {
     if (!isArray(files)) {
-      files = [files]
+      files = [<string>files]
     }
-    this.queue.enqueue({ type: 'setFileInput', selector, files })
+    this.queue.enqueue({ type: 'setFileInput', selector, files: <string[]>files })
     return this
+  }
+
+  downloadFile(selector: string): Chromeless<string> {
+    this.lastReturnPromise = this.queue.process<string>({
+      type: 'downloadFile',
+      selector
+    })
+
+    return new Chromeless<string>({}, this)
   }
 
   async end(): Promise<T> {
