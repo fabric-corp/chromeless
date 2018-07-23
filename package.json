@@ -22,6 +22,7 @@
   "scripts": {
     "ava": "tsc -d && nyc ava",
     "build": "npm run clean && tsc -d",
+    "postinstall": "npm run build",
     "clean": "rimraf dist",
     "coverage": "npm run ava",
     "precommit": "lint-staged",
