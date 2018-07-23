@@ -90,8 +90,10 @@ export async function waitForNode(
           expression: `(${getNode})(\`${selector}\`)`,
         })
 
-        if (result.result.value !== null)
+        if (result.result.value !== null) {
           resolve()
+          return
+        }
 
         setTimeout(poll, 1)
       }
@@ -142,8 +144,10 @@ export async function waitForFn(
           awaitPromise: true
         })
 
-        if (result.result.value === true)
+        if (result.result.value === true) {
           resolve()
+          return
+        }
 
         setTimeout(poll, 1)
       }
