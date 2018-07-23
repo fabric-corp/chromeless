@@ -14,6 +14,7 @@ import {
 } from './types'
 import * as CDP from 'chrome-remote-interface'
 import * as AWS from 'aws-sdk'
+import { setTimeout } from 'core-js/library/web/timers';
 
 export const version: string = ((): string => {
   if (fs.existsSync(path.join(__dirname, '../package.json'))) {
@@ -79,27 +80,76 @@ export async function waitForNode(
 
   if (result.result.value === null) {
     const start = new Date().getTime()
+
     return new Promise<void>((resolve, reject) => {
-      const interval = setInterval(async () => {
-        if (new Date().getTime() - start > waitTimeout) {
-          clearInterval(interval)
-          reject(
-            new Error(`wait("${selector}") timed out after ${waitTimeout}ms`),
-          )
-        }
+      const poll = async () => {
+        if (new Date().getTime() - start > waitTimeout)
+          reject(new Error(`wait("${selector}") timed out after ${waitTimeout}ms`))
 
         const result = await Runtime.evaluate({
           expression: `(${getNode})(\`${selector}\`)`,
         })
 
-        if (result.result.value !== null) {
-          clearInterval(interval)
+        if (result.result.value !== null)
           resolve()
-        }
-      }, 500)
+
+        setTimeout(poll, 1)
+      }
+
+      poll()
     })
-  } else {
-    return
+  }
+}
+
+export async function waitForFn(
+  client: Client,
+  waitTimeout: number,
+  fn: string,
+  ...args: any[]
+): Promise<void> {
+  const { Runtime } = client
+  const jsonArgs = JSON.stringify(args)
+  const argStr = jsonArgs.substr(1, jsonArgs.length - 2)
+
+  const expression = `
+    (() => {
+      const expressionResult = (${fn})(${argStr});
+      if (expressionResult && expressionResult.then) {
+        expressionResult.catch((error) => { throw new Error(error); });
+        return expressionResult;
+      }
+      return Promise.resolve(expressionResult);
+    })();
+  `
+
+  const result = await Runtime.evaluate({
+    expression,
+    returnByValue: true,
+    awaitPromise: true,
+  })
+
+  if (result.result.value === false) {
+    const start = new Date().getTime()
+
+    return new Promise<void>((resolve, reject) => {
+      const poll = async () => {
+        if (new Date().getTime() - start > waitTimeout)
+          reject(new Error(`wait("${fn}") timed out after ${waitTimeout}ms`))
+
+        const result = await Runtime.evaluate({
+          expression,
+          returnByValue: true,
+          awaitPromise: true
+        })
+
+        if (result.result.value === true)
+          resolve()
+
+        setTimeout(poll, 1)
+      }
+
+      poll()
+    })
   }
 }
 

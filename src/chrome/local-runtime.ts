@@ -42,6 +42,7 @@ import {
   uploadToS3,
   eventToPromise,
   waitForPromise,
+  waitForFn,
 } from '../util'
 import * as cuid from 'cuid';
 import * as fs from 'fs';
@@ -69,8 +70,8 @@ export default class LocalRuntime {
           return this.waitSelector(command.selector, command.timeout)
         } else if (command.timeout) {
           return this.waitTimeout(command.timeout)
-        } else {
-          throw new Error('waitFn not yet implemented')
+        } else if (command.fn) {
+          return this.waitFn(command.timeout, command.fn, command.args)
         }
       }
       case 'clearCache':
@@ -191,6 +192,16 @@ export default class LocalRuntime {
     this.log(`Waiting for ${selector} ${waitTimeout}`)
     await waitForNode(this.client, selector, waitTimeout)
     this.log(`Waited for ${selector}`)
+  }
+
+  private async waitFn(
+    waitTimeout: number = this.chromelessOptions.waitTimeout,
+    fn: string,
+    ...args: any[]
+  ): Promise<void> {
+    this.log(`Waiting for ${fn} ${waitTimeout}`)
+    await waitForFn(this.client, waitTimeout, fn, args);
+    this.log(`Waited for ${fn}`)
   }
 
   private async click(selector: string, x?: number, y?: number): Promise<void> {
